@@ -1,14 +1,12 @@
-FROM pytorch/pytorch:1.11.0-cuda11.3-cudnn8-devel
-COPY requirements.txt /requirements.txt
-RUN rm /etc/apt/sources.list.d/cuda.list && rm /etc/apt/sources.list.d/nvidia-ml.list && apt-key del 7fa2af80 && \
-    apt-get update && apt-get install -y --no-install-recommends wget git && \
-    wget -O /cuda-keyring_1.0-1_all.deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/cuda-keyring_1.0-1_all.deb && \
-    dpkg -i /cuda-keyring_1.0-1_all.deb
+FROM pytorch/pytorch:1.13.0-cuda11.6-cudnn8-devel
 ENV TCNN_CUDA_ARCHITECTURES=86
-RUN pip install packaging && \
-    pip install torch-scatter -f https://data.pyg.org/whl/torch-1.11.0+cu113.html && \
+ENV CUDA_HOME="/usr/local/cuda-11.6"
+ENV PATH="$CUDA_HOME/bin:$PATH"
+ENV LD_LIBRARY_PATH="$CUDA_HOME/lib64:$LD_LIBRARY_PATH"
+RUN apt-get update && apt-get install -y --no-install-recommends wget git ninja-build && \
+    pip install packaging && \
+    pip install torch-scatter -f https://data.pyg.org/whl/torch-1.13.0+cu116.html && \
     pip install git+https://github.com/NVlabs/tiny-cuda-nn.git@v1.6#subdirectory=bindings/torch && \
-    git clone https://github.com/NVIDIA/apex /apex && \
-    pip install -v --disable-pip-version-check --no-cache-dir --no-build-isolation --global-option="--cpp_ext" --global-option="--cuda_ext" /apex && \
-    pip install -r /requirements.txt && pip install opencv-python-headless torchmetrics==0.9.3
+    git clone https://github.com/NVIDIA/apex /apex && cd /apex && git checkout 23.08 && python setup.py bdist_wheel --cpp_ext --cuda_ext && pip install dist/*.whl && cd /volume && \
+    pip install opencv-python-headless pytorch-lightning==1.8 "pyglet<2" einops matplotlib kornia imageio dearpygui scipy pymcubes trimesh plotly
 WORKDIR /volume

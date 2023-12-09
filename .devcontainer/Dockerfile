@@ -1,7 +1,8 @@
 FROM pytorch/pytorch:1.13.0-cuda11.6-cudnn8-devel
-ENV TCNN_CUDA_ARCHITECTURES=86
+ENV TCNN_CUDA_ARCHITECTURES=75
 ENV CUDA_HOME="/usr/local/cuda-11.6"
 ENV PATH="$CUDA_HOME/bin:$PATH"
+ENV MAX_JOBS=2
 ENV LD_LIBRARY_PATH="$CUDA_HOME/lib64:$LD_LIBRARY_PATH"
 RUN apt-get update && apt-get install -y --no-install-recommends wget git ninja-build && \
     pip install packaging && \

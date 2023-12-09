@@ -2,6 +2,13 @@
 
 export ROOT_DIR=/home/ubuntu/data/nerf_data/Synthetic_NeRF
 
+
+python train.py \
+    --root_dir /volume/data/nerf_llff_data/nerf_llff_data/fern \
+    --dataset_name 'colmap'\
+    --exp_name fern --no_save_test \
+    --num_epochs 1 --batch_size 16384 --lr 2e-2
+
 python train.py \
     --root_dir $ROOT_DIR/Chair \
     --exp_name Chair --no_save_test \

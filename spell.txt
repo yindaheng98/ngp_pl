@@ -1,0 +1,4 @@
+python train.py     --root_dir /volume/data/nerf_llff_data/nerf_llff_data/fern     --dataset_name 'colmap'    --exp_name fern  --num_epochs 20 --batch_size 16384 --lr 2e-2
+python test.py     --root_dir /volume/data/nerf_llff_data/nerf_llff_data/fern     --dataset_name 'colmap'    --exp_name fern  --num_epochs 20 --batch_size 16384 --lr 2e-2
+
+python train.py     --root_dir /volume/data/boxing/frame1     --dataset_name 'colmap'    --exp_name boxing1 --no_save_test  --num_epochs 20 --batch_size 16384 --lr 2e-2

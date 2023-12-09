@@ -134,3 +134,13 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# data
+data
+data/*
+data
+results
+glibc-2.29
+
+# code scraps
+temp.py

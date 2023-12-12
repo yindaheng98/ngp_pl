@@ -1,9 +1,9 @@
 import subprocess
 path = "/volume/data/boxing/"
-indexes = range(14, 72)
+indices = range(42, 72)
 # spell = "python train.py     --root_dir {}frame{}     --dataset_name 'colmap'    --exp_name boxing{} --no_save_test  --num_epochs 20 --batch_size 16384 --lr 2e-2"
 
-for index in indexes:
+for index in indices:
     try:
         subprocess.run(['python', 'train.py', '--root_dir', f'{path}frame{index}',
                         '--dataset_name', 'colmap', '--exp_name', f'boxing{index}',

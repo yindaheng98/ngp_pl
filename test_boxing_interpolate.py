@@ -67,7 +67,7 @@ def main():
     dataset_name = 'colmap'
     exp_names = 'boxing{}'
     frame_names = 'frame{}'
-    frame_indexes = range(1, 26)# range(1, 3)
+    frame_indexes = range(1, 41)# range(1, 3)
     interpolations_per_img = 5
     frame_count = 0
     total_interpolations = 0

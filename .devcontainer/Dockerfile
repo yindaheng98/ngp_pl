@@ -8,5 +8,5 @@ RUN apt-get update && apt-get install -y --no-install-recommends wget git ninja-
     pip install torch-scatter -f https://data.pyg.org/whl/torch-1.13.0+cu116.html && \
     pip install git+https://github.com/NVlabs/tiny-cuda-nn.git@v1.6#subdirectory=bindings/torch && \
     git clone https://github.com/NVIDIA/apex /apex && cd /apex && git checkout 23.08 && python setup.py bdist_wheel --cpp_ext --cuda_ext && pip install dist/*.whl && \
-    pip install opencv-python-headless pytorch-lightning==1.8 "pyglet<2" einops matplotlib kornia imageio dearpygui scipy pymcubes trimesh plotly
+    pip install opencv-python-headless pytorch-lightning==1.8 "pyglet<2" einops==0.4.1 matplotlib kornia==0.6.5 imageio lpips dearpygui scipy pymcubes trimesh plotly pymcubes
 WORKDIR /volume

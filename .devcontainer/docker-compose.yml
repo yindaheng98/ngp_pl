@@ -5,8 +5,10 @@ services:
     image: ngp_pl:latest
     build:
       context: ..
+      shm_size: '16gb'
       dockerfile: ./.devcontainer/Dockerfile
-      
+    shm_size: '16gb'
+
     stdin_open: true
     tty: true
     environment:

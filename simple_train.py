@@ -42,12 +42,10 @@ os.makedirs(category_dir, exist_ok=True)
 with open(os.path.join(category_dir, "category-train.txt"), "w") as f:
     json.dump(category_args, f)
 args_sha1 = hashlib.sha1(str(args).encode("utf8")).hexdigest()
-args_dir = os.path.join(category_dir, args_sha1[0:10])
-os.makedirs(args_dir, exist_ok=True)
-with open(os.path.join(args_dir, "command-train.txt"), "w") as f:
-    json.dump(sys.argv, f)
-ckpt_dir = os.path.join(args_dir, "ckpts")
+ckpt_dir = os.path.join(category_dir, args_sha1[0:10] + "_ckpts")
 os.makedirs(ckpt_dir, exist_ok=True)
+with open(os.path.join(ckpt_dir, "command-train.txt"), "w") as f:
+    json.dump(sys.argv, f)
 
 device = torch.device('cuda')
 model = models.parse_args(parser).to(device).train()

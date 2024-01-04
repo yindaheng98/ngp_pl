@@ -8,6 +8,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 from utils import slim_ckpt
 from train import NeRFSystem
+import time
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -37,15 +38,18 @@ if __name__ == '__main__':
     (opts, ), (net_sch, ) = system.configure_optimizers()
     system.to(device)
     system.on_train_start()
+    system.train()
     for epoch in range(hparams.num_epochs):
         progress_bar = tqdm(system.train_dataloader())
         for batch in progress_bar:
             batch['rgb'] = batch['rgb'].to(device)
-            with torch.autocast(device_type="cuda"):
+            with torch.autocast(device_type="cuda", dtype=torch.float16):
+                stime = time.time()
                 loss = system.training_step(batch, None)
+                etime = time.time()
                 opts.zero_grad()
                 loss.backward()
-            progress_bar.set_description(f"loss {loss} lr {net_sch.get_last_lr()}")
+            progress_bar.set_description(f"loss {loss} time {etime - stime}")
         net_sch.step()
 
     if not hparams.val_only:  # save slimmed ckpt for the last epoch

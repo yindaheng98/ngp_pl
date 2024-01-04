@@ -10,14 +10,14 @@
             "request": "launch",
             "program": "train.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
             "args": [
                 "--root_dir",
                 "data/Synthetic_NSVF/Wineholder",
                 "--exp_name",
                 "Wineholder",
                 "--num_epochs",
-                "1",
+                "2",
                 "--batch_size",
                 "16384",
                 "--lr",
@@ -36,7 +36,11 @@
                 "--dataset",
                 "nsvf",
                 "--root_dir",
-                "data/Synthetic_NSVF/Wineholder"
+                "data/Synthetic_NSVF/Wineholder",
+                "--exp_name",
+                "Synthetic_NSVF_Wineholder",
+                "--num_epochs",
+                "20",
             ]
         }
     ]

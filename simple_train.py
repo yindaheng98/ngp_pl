@@ -1,3 +1,4 @@
+import os
 import argparse
 from datasets import ColmapDataset
 import datasets.args as datasets
@@ -16,6 +17,8 @@ from kornia.utils.grid import create_meshgrid3d
 parser = argparse.ArgumentParser()
 parser = models.add_arguements(parser)
 parser = datasets.add_arguements(parser)
+parser.add_argument('--exp_name', type=str, default='exp',
+                    help='experiment name')
 parser.add_argument('--num_epochs', type=int, default=30,
                     help='number of training epochs')
 parser.add_argument('--lr', type=float, default=1e-2,
@@ -52,6 +55,8 @@ net_opt = FusedAdam(net_params, args.lr, eps=1e-15)
 net_sch = CosineAnnealingLR(net_opt, args.num_epochs, args.lr/30)
 train_psnr = PeakSignalNoiseRatio(data_range=1).to(device)
 
+ckpt_dir = os.path.join("results", args.exp_name, "ckpts")
+os.makedirs(ckpt_dir)
 warmup_steps, update_interval, global_step = 256, 16, 0
 poses = train_set.poses.to(device)
 directions = train_set.directions.to(device)
@@ -91,6 +96,6 @@ for epoch in range(args.num_epochs):
             loss.backward()
             net_opt.step()
         global_step += 1
+    torch.save(model.state_dict(), os.path.join(ckpt_dir, "epoch-%04d-psnr-%.2f.ckpt" % (epoch, psnr)))
     net_sch.step()
-print(model)
-print(len(train_loader))
+torch.save(model.state_dict(), os.path.join(ckpt_dir, "efinal-psnr-%.2f.ckpt" % psnr))

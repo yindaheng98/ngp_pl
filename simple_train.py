@@ -15,7 +15,6 @@ from apex.optimizers import FusedAdam
 import torch
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torchmetrics import PeakSignalNoiseRatio
-from kornia.utils.grid import create_meshgrid3d
 
 parser = argparse.ArgumentParser()
 parser = models.add_arguements(parser)
@@ -36,17 +35,15 @@ parser.add_argument('--distortion_loss_w', type=float, default=0,
                         a good value is 1e-3 for real scene and 1e-2 for synthetic scene
                         ''')
 args = parser.parse_args()
-sha1 = hashlib.sha1(str(args).encode("utf8")).hexdigest()
+dict_args = dict(**models.dict_args(parser), **datasets.dict_args(parser), exp_name=args.exp_name)
+sha1 = hashlib.sha1(json.dumps(dict_args).encode("utf8")).hexdigest()
 ckpt_dir = os.path.join("results", args.exp_name, "ckpts", sha1[0:10])
 os.makedirs(ckpt_dir, exist_ok=True)
-with open(os.path.join(ckpt_dir, "command.txt"), "w") as f:
+with open(os.path.join(ckpt_dir, "command-train.txt"), "w") as f:
     json.dump(sys.argv, f)
 
 device = torch.device('cuda')
-model = models.parse_args(parser)
-G = model.grid_size
-model.register_buffer("density_grid", torch.zeros(model.cascades, G**3))
-model.register_buffer("grid_coords", create_meshgrid3d(G, G, G, False, dtype=torch.int32).reshape(-1, 3))
+model = models.parse_args(parser).to(device).train()
 
 train_set = datasets.parse_args(parser, split='train')
 train_loader = DataLoader(
@@ -56,7 +53,6 @@ train_loader = DataLoader(
     batch_size=None,
     pin_memory=True)
 
-model = model.to(device).train()
 net_params = [p for _, p in model.named_parameters()]
 net_loss = NeRFLoss(lambda_distortion=args.distortion_loss_w)
 net_opt = FusedAdam(net_params, args.lr, eps=1e-15)

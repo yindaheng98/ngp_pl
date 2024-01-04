@@ -30,3 +30,14 @@ def parse_args(parser, split='train'):
         dataset.ray_sampling_strategy = args.ray_sampling_strategy
         dataset.batch_size = args.batch_size
     return dataset
+
+
+def dict_args(parser):
+    args = parser.parse_args()
+    return dict(
+        dataset=args.dataset,
+        root_dir=args.root_dir,
+        downsample=args.downsample,
+        ray_sampling_strategy=args.ray_sampling_strategy,
+        batch_size=args.batch_size,
+    )

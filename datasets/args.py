@@ -9,10 +9,9 @@ def add_arguements(parser: ArgumentParser):
     return parser
 
 
-def parse_args(parser):
+def parse_args(parser, split='train'):
     args = parser.parse_args()
     dataset = dataset_dict[args.dataset]
     root_dir = args.root_dir
-    train_set = dataset(root_dir, split='train')
-    test_set = dataset(root_dir, split='test')
-    return train_set, test_set
+    dataset = dataset(root_dir, split=split)
+    return dataset

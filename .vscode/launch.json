@@ -42,6 +42,24 @@
                 "--num_epochs",
                 "20",
             ]
+        },
+        {
+            "name": "simple_eval",
+            "type": "python",
+            "request": "launch",
+            "program": "simple_eval.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--dataset",
+                "nsvf",
+                "--root_dir",
+                "data/Synthetic_NSVF/Wineholder",
+                "--exp_name",
+                "Synthetic_NSVF_Wineholder",
+                "--ckpt_path",
+                "results/Synthetic_NSVF_Wineholder_9e5c4fc024/ba1cd13b1e/ckpts/epoch-0020-psnr-30.52.ckpt",
+            ]
         }
     ]
 }

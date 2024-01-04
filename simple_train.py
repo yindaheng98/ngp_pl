@@ -4,10 +4,11 @@ from torch.utils.data import DataLoader
 
 parser = argparse.ArgumentParser()
 parser = datasets.add_arguements(parser)
-test_set = datasets.parse_args(parser, split='test')
-test_loader = DataLoader(
-    test_set,
-    num_workers=8,
+train_set = datasets.parse_args(parser, split='train')
+train_loader = DataLoader(
+    train_set,
+    num_workers=16,
+    persistent_workers=True,
     batch_size=None,
     pin_memory=True)
-print(len(test_loader))
+print(len(train_loader))

@@ -1,4 +1,7 @@
 import os
+import sys
+import json
+import hashlib
 import argparse
 from datasets import ColmapDataset
 import datasets.args as datasets
@@ -33,6 +36,11 @@ parser.add_argument('--distortion_loss_w', type=float, default=0,
                         a good value is 1e-3 for real scene and 1e-2 for synthetic scene
                         ''')
 args = parser.parse_args()
+sha1 = hashlib.sha1(str(args).encode("utf8")).hexdigest()
+ckpt_dir = os.path.join("results", args.exp_name, "ckpts", sha1[0:10])
+os.makedirs(ckpt_dir, exist_ok=True)
+with open(os.path.join(ckpt_dir, "command.txt"), "w") as f:
+    json.dump(sys.argv, f)
 
 device = torch.device('cuda')
 model = models.parse_args(parser)
@@ -55,8 +63,6 @@ net_opt = FusedAdam(net_params, args.lr, eps=1e-15)
 net_sch = CosineAnnealingLR(net_opt, args.num_epochs, args.lr/30)
 train_psnr = PeakSignalNoiseRatio(data_range=1).to(device)
 
-ckpt_dir = os.path.join("results", args.exp_name, "ckpts")
-os.makedirs(ckpt_dir)
 warmup_steps, update_interval, global_step = 256, 16, 0
 poses = train_set.poses.to(device)
 directions = train_set.directions.to(device)
@@ -96,6 +102,6 @@ for epoch in range(args.num_epochs):
             loss.backward()
             net_opt.step()
         global_step += 1
-    torch.save(model.state_dict(), os.path.join(ckpt_dir, "epoch-%04d-psnr-%.2f.ckpt" % (epoch, psnr)))
+    torch.save(model.state_dict(), os.path.join(ckpt_dir, "epoch-%04d-psnr-%.2f.ckpt" % (epoch + 1, psnr)))
     net_sch.step()
-torch.save(model.state_dict(), os.path.join(ckpt_dir, "efinal-psnr-%.2f.ckpt" % psnr))
+torch.save(model.state_dict(), os.path.join(ckpt_dir, "final-psnr-%.2f.ckpt" % psnr))

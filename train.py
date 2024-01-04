@@ -74,6 +74,7 @@ class NeRFSystem(LightningModule):
             torch.zeros(self.model.cascades, G**3))
         self.model.register_buffer('grid_coords',
             create_meshgrid3d(G, G, G, False, dtype=torch.int32).reshape(-1, 3))
+        self._global_step = 0
 
     def forward(self, batch, split):
         if split=='train':
@@ -157,9 +158,9 @@ class NeRFSystem(LightningModule):
                                         self.train_dataset.img_wh)
 
     def training_step(self, batch, batch_nb, *args):
-        if self.global_step%self.update_interval == 0:
+        if self._global_step%self.update_interval == 0:
             self.model.update_density_grid(0.01*MAX_SAMPLES/3**0.5,
-                                           warmup=self.global_step<self.warmup_steps,
+                                           warmup=self._global_step<self.warmup_steps,
                                            erode=self.hparams.dataset_name=='colmap')
 
         results = self(batch, split='train')
@@ -182,6 +183,7 @@ class NeRFSystem(LightningModule):
         self.log('train/vr_s', results['vr_samples']/len(batch['rgb']), True)
         self.log('train/psnr', self.train_psnr, True)
 
+        self._global_step += 1
         return loss
 
     def on_validation_start(self):

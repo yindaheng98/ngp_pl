@@ -49,6 +49,7 @@ if __name__ == '__main__':
                 etime = time.time()
                 opts.zero_grad()
                 loss.backward()
+                opts.step()
             progress_bar.set_description(f"loss {loss} time {etime - stime}")
         net_sch.step()
 

@@ -1,8 +1,9 @@
 import argparse
+from datasets import ColmapDataset
 import datasets.args as datasets
 import models.args as models
 from datasets.ray_utils import get_rays
-from models.rendering import render
+from models.rendering import render, MAX_SAMPLES
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from losses import NeRFLoss
@@ -51,36 +52,45 @@ net_opt = FusedAdam(net_params, args.lr, eps=1e-15)
 net_sch = CosineAnnealingLR(net_opt, args.num_epochs, args.lr/30)
 train_psnr = PeakSignalNoiseRatio(data_range=1).to(device)
 
+warmup_steps, update_interval, global_step = 256, 16, 0
 poses = train_set.poses.to(device)
 directions = train_set.directions.to(device)
 model.mark_invisible_cells(train_set.K.to(device), poses, train_set.img_wh)
 for epoch in range(args.num_epochs):
     progress_bar = tqdm(train_loader)
     for batch in progress_bar:
-        rays_o, rays_d = get_rays(directions[batch['pix_idxs']], poses[batch['img_idxs']])
-        kwargs = {}
-        if args.scale > 0.5:
-            kwargs['exp_step_factor'] = 1/256
-        if args.use_exposure:
-            kwargs['exposure'] = batch['exposure']
-
-        results = render(
-            model, rays_o, rays_d,
-            test_time=False, random_bg=args.random_bg,
-            **kwargs)
         batch['rgb'] = batch['rgb'].to(device)
+        with torch.autocast(device_type="cuda", dtype=torch.float16):
+            if global_step % update_interval == 0:
+                model.update_density_grid(0.01*MAX_SAMPLES/3**0.5,
+                                          warmup=global_step < warmup_steps,
+                                          erode=isinstance(train_set, ColmapDataset))
 
-        loss_d = net_loss(results, batch)
-        if args.use_exposure:
-            zero_radiance = torch.zeros(1, 3, device=device)
-            unit_exposure_rgb = model.log_radiance_to_rgb(zero_radiance, exposure=torch.ones(1, 1, device=device))
-            loss_d['unit_exposure'] = 0.5*(unit_exposure_rgb-train_set.unit_exposure_rgb)**2
-        loss = sum(lo.mean() for lo in loss_d.values())
-        with torch.no_grad():
-            psnr = train_psnr(results['rgb'], batch['rgb'])
-        progress_bar.set_description(f"loss {loss} psnr {psnr} lr {net_sch.get_last_lr()}")
-        net_opt.zero_grad()
-        loss.backward()
+            rays_o, rays_d = get_rays(directions[batch['pix_idxs']], poses[batch['img_idxs']])
+            kwargs = {}
+            if args.scale > 0.5:
+                kwargs['exp_step_factor'] = 1/256
+            if args.use_exposure:
+                kwargs['exposure'] = batch['exposure']
+
+            results = render(
+                model, rays_o, rays_d,
+                test_time=False, random_bg=args.random_bg,
+                **kwargs)
+
+            loss_d = net_loss(results, batch)
+            if args.use_exposure:
+                zero_radiance = torch.zeros(1, 3, device=device)
+                unit_exposure_rgb = model.log_radiance_to_rgb(zero_radiance, exposure=torch.ones(1, 1, device=device))
+                loss_d['unit_exposure'] = 0.5*(unit_exposure_rgb-train_set.unit_exposure_rgb)**2
+            loss = sum(lo.mean() for lo in loss_d.values())
+            with torch.no_grad():
+                psnr = train_psnr(results['rgb'], batch['rgb'])
+            progress_bar.set_description(f"loss %.4f psnr %.4f" % (loss, psnr))
+            net_opt.zero_grad()
+            loss.backward()
+            net_opt.step()
+        global_step += 1
     net_sch.step()
 print(model)
 print(len(train_loader))

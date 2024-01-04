@@ -35,12 +35,19 @@ parser.add_argument('--distortion_loss_w', type=float, default=0,
                         a good value is 1e-3 for real scene and 1e-2 for synthetic scene
                         ''')
 args = parser.parse_args()
-dict_args = dict(**models.dict_args(parser), **datasets.dict_args(parser), exp_name=args.exp_name)
-sha1 = hashlib.sha1(json.dumps(dict_args).encode("utf8")).hexdigest()
-ckpt_dir = os.path.join("results", args.exp_name, "ckpts", sha1[0:10])
-os.makedirs(ckpt_dir, exist_ok=True)
-with open(os.path.join(ckpt_dir, "command-train.txt"), "w") as f:
+category_args = dict(**models.dict_args(parser), **datasets.dict_args(parser), exp_name=args.exp_name)
+category_sha1 = hashlib.sha1(json.dumps(category_args).encode("utf8")).hexdigest()
+category_dir = os.path.join("results", args.exp_name + "_" + category_sha1[0:10])
+os.makedirs(category_dir, exist_ok=True)
+with open(os.path.join(category_dir, "category-train.txt"), "w") as f:
+    json.dump(category_args, f)
+args_sha1 = hashlib.sha1(str(args).encode("utf8")).hexdigest()
+args_dir = os.path.join(category_dir, args_sha1[0:10])
+os.makedirs(args_dir, exist_ok=True)
+with open(os.path.join(args_dir, "command-train.txt"), "w") as f:
     json.dump(sys.argv, f)
+ckpt_dir = os.path.join(args_dir, "ckpts")
+os.makedirs(ckpt_dir, exist_ok=True)
 
 device = torch.device('cuda')
 model = models.parse_args(parser).to(device).train()
@@ -93,7 +100,7 @@ for epoch in range(args.num_epochs):
             loss = sum(lo.mean() for lo in loss_d.values())
             with torch.no_grad():
                 psnr = train_psnr(results['rgb'], batch['rgb'])
-            progress_bar.set_description(f"loss %.4f psnr %.4f" % (loss, psnr))
+            progress_bar.set_description(f"{epoch+1}/{args.num_epochs} loss %.4f psnr %.4f" % (loss, psnr))
             net_opt.zero_grad()
             loss.backward()
             net_opt.step()
